@@ -1,0 +1,11 @@
+eclipse.preferences.version=1
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.624836457/KSDK_PATH/delimiter=;
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.624836457/KSDK_PATH/operation=replace
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.624836457/KSDK_PATH/value=C\:\\Users\\adrien\\MCU Programming\\K64F_SDK_NoDebugConsole
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.624836457/append=true
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.624836457/appendContributed=true
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.929614692/KSDK_PATH/delimiter=;
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.929614692/KSDK_PATH/operation=replace
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.929614692/KSDK_PATH/value=C\:\\Users\\adrien\\MCU Programming\\K64F_SDK_NoDebugConsole
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.929614692/append=true
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.929614692/appendContributed=true
