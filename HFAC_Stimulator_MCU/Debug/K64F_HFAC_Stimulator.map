@@ -317,7 +317,7 @@ Discarded input sections
  .debug_macro   0x0000000000000000       0x1b ./Sources/peripherals.o
  .debug_macro   0x0000000000000000      0xa5a ./Sources/peripherals.o
  .debug_line    0x0000000000000000       0x6b ./Sources/peripherals.o
- .debug_str     0x0000000000000000     0x2d49 ./Sources/peripherals.o
+ .debug_str     0x0000000000000000     0x2d4a ./Sources/peripherals.o
  .comment       0x0000000000000000       0x72 ./Sources/peripherals.o
  .debug_frame   0x0000000000000000       0x4c ./Sources/peripherals.o
  .ARM.attributes
@@ -651,7 +651,7 @@ Discarded input sections
  .debug_macro   0x0000000000000000      0x16d ./SDK/devices/MK64F12/drivers/fsl_common.o
  .debug_macro   0x0000000000000000       0x7b ./SDK/devices/MK64F12/drivers/fsl_common.o
  .debug_line    0x0000000000000000      0x547 ./SDK/devices/MK64F12/drivers/fsl_common.o
- .debug_str     0x0000000000000000    0x7b408 ./SDK/devices/MK64F12/drivers/fsl_common.o
+ .debug_str     0x0000000000000000    0x7b409 ./SDK/devices/MK64F12/drivers/fsl_common.o
  .comment       0x0000000000000000       0x72 ./SDK/devices/MK64F12/drivers/fsl_common.o
  .debug_frame   0x0000000000000000       0x58 ./SDK/devices/MK64F12/drivers/fsl_common.o
  .ARM.attributes
@@ -3489,33 +3489,33 @@ OUTPUT(K64F_HFAC_Stimulator.elf elf32-littlearm)
  .debug_line    0x000000000000626a      0xd1e ./SDK/devices/MK64F12/drivers/fsl_uart.o
  .debug_line    0x0000000000006f88      0x44c ./SDK/devices/MK64F12/system_MK64F12.o
 
-.debug_str      0x0000000000000000    0x85f83
- .debug_str     0x0000000000000000    0x80b51 ./Sources/K64F_HFAC_Stimulator.o
-                                      0x80f5a (size before relaxing)
- .debug_str     0x0000000000080b51      0x5bc ./Sources/clock_config.o
-                                      0x7c4a1 (size before relaxing)
- .debug_str     0x000000000008110d      0x9e6 ./Sources/pin_mux.o
-                                      0x7c62f (size before relaxing)
- .debug_str     0x0000000000081af3       0x6c ./SDK/devices/MK64F12/gcc/startup_MK64F12.o
-                                         0xa9 (size before relaxing)
- .debug_str     0x0000000000081b5f     0x14c3 ./SDK/devices/MK64F12/drivers/fsl_clock.o
-                                      0x7d8f5 (size before relaxing)
- .debug_str     0x0000000000083022       0xad ./SDK/devices/MK64F12/drivers/fsl_dmamux.o
-                                      0x7be2a (size before relaxing)
- .debug_str     0x00000000000830cf      0xc85 ./SDK/devices/MK64F12/drivers/fsl_dspi.o
-                                      0x7d7da (size before relaxing)
- .debug_str     0x0000000000083d54      0xaec ./SDK/devices/MK64F12/drivers/fsl_edma.o
-                                      0x7d4fb (size before relaxing)
- .debug_str     0x0000000000084840      0xb55 ./SDK/devices/MK64F12/drivers/fsl_ftm.o
-                                      0x7cd36 (size before relaxing)
- .debug_str     0x0000000000085395       0xdf ./SDK/devices/MK64F12/drivers/fsl_gpio.o
-                                      0x7bc89 (size before relaxing)
- .debug_str     0x0000000000085474       0x8c ./SDK/devices/MK64F12/drivers/fsl_pit.o
-                                      0x7be63 (size before relaxing)
- .debug_str     0x0000000000085500      0x9a4 ./SDK/devices/MK64F12/drivers/fsl_uart.o
-                                      0x7d1e5 (size before relaxing)
- .debug_str     0x0000000000085ea4       0xdf ./SDK/devices/MK64F12/system_MK64F12.o
-                                      0x77647 (size before relaxing)
+.debug_str      0x0000000000000000    0x85f84
+ .debug_str     0x0000000000000000    0x80b52 ./Sources/K64F_HFAC_Stimulator.o
+                                      0x80f5b (size before relaxing)
+ .debug_str     0x0000000000080b52      0x5bc ./Sources/clock_config.o
+                                      0x7c4a2 (size before relaxing)
+ .debug_str     0x000000000008110e      0x9e6 ./Sources/pin_mux.o
+                                      0x7c630 (size before relaxing)
+ .debug_str     0x0000000000081af4       0x6c ./SDK/devices/MK64F12/gcc/startup_MK64F12.o
+                                         0xaa (size before relaxing)
+ .debug_str     0x0000000000081b60     0x14c3 ./SDK/devices/MK64F12/drivers/fsl_clock.o
+                                      0x7d8f6 (size before relaxing)
+ .debug_str     0x0000000000083023       0xad ./SDK/devices/MK64F12/drivers/fsl_dmamux.o
+                                      0x7be2b (size before relaxing)
+ .debug_str     0x00000000000830d0      0xc85 ./SDK/devices/MK64F12/drivers/fsl_dspi.o
+                                      0x7d7db (size before relaxing)
+ .debug_str     0x0000000000083d55      0xaec ./SDK/devices/MK64F12/drivers/fsl_edma.o
+                                      0x7d4fc (size before relaxing)
+ .debug_str     0x0000000000084841      0xb55 ./SDK/devices/MK64F12/drivers/fsl_ftm.o
+                                      0x7cd37 (size before relaxing)
+ .debug_str     0x0000000000085396       0xdf ./SDK/devices/MK64F12/drivers/fsl_gpio.o
+                                      0x7bc8a (size before relaxing)
+ .debug_str     0x0000000000085475       0x8c ./SDK/devices/MK64F12/drivers/fsl_pit.o
+                                      0x7be64 (size before relaxing)
+ .debug_str     0x0000000000085501      0x9a4 ./SDK/devices/MK64F12/drivers/fsl_uart.o
+                                      0x7d1e6 (size before relaxing)
+ .debug_str     0x0000000000085ea5       0xdf ./SDK/devices/MK64F12/system_MK64F12.o
+                                      0x77648 (size before relaxing)
 
 .comment        0x0000000000000000       0x71
  .comment       0x0000000000000000       0x71 ./Sources/K64F_HFAC_Stimulator.o
