@@ -1,0 +1,13 @@
+Output: NC Drill Files
+Type  : NC Drill
+From  : PCB Document [HFAC_Stimulator_4channel.PcbDoc]
+   Generated File[HFAC_Stimulator_4channel-RoundHoles.TXT]
+   Generated File[HFAC_Stimulator_4channel-SlotHoles.TXT]
+   Generated File[HFAC_Stimulator_4channel.LDP]
+   Generated File[HFAC_Stimulator_4channel.DRR]
+
+
+Files Generated   : 4
+Documents Printed : 0
+
+Finished Output Generation At 10:11:52 On 29/04/2019

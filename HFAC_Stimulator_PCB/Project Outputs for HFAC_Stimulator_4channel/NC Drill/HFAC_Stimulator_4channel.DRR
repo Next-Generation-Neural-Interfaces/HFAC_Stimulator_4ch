@@ -1,0 +1,21 @@
+----------------------------------------------------------------------------------------------------------------------------------
+NCDrill File Report For: HFAC_Stimulator_4channel.PcbDoc   29/04/2019  10:11:51
+----------------------------------------------------------------------------------------------------------------------------------
+
+Layer Pair : Top Layer to Bottom Layer
+ASCII RoundHoles File : HFAC_Stimulator_4channel-RoundHoles.TXT
+ASCII SlotHoles File : HFAC_Stimulator_4channel-SlotHoles.TXT
+
+Tool       Hole Size               Hole Tolerance               Hole Type       Hole Count   Plated         Tool Travel
+----------------------------------------------------------------------------------------------------------------------------------
+T1      0.2mm (8mil)                                              Round             5         PTH        0.00mm (0.00inch)
+T2      0.25mm (10mil)                                            Round             30        PTH        0.00mm (0.00inch)
+T3      0.3mm (12mil)                                             Round             177       PTH        0.00mm (0.00inch)
+T4      0.6mm (24mil)                                             Slot              2         PTH        0.00mm (0.00inch)
+T5      0.65mm (26mil)                                            Slot              2         PTH        0.00mm (0.00inch)
+T6      0.9mm (35mil)                                             Round             96        PTH        0.00mm (0.00inch)
+T7      1.02mm (40mil)                                            Round             7         PTH        0.00mm (0.00inch)
+----------------------------------------------------------------------------------------------------------------------------------
+Totals                                                                              319
+
+Total Processing Time (hh:mm:ss) : 00:00:01
