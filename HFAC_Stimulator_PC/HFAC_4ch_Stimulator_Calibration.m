@@ -1,3 +1,12 @@
+% HFAC_4ch_Stimulator_Calibration.m
+%  
+% 
+% Author: Adrien Rapeaux
+%  
+% Licensing:
+% This file is licensed under the GNU GPL v3 license.
+% You can access the license at https://www.gnu.org/licenses/gpl-3.0.html
+
 %This script is used to calibrate the positive and negative gain
 %potentiometers of 4-channel HFAC Stimulators, one channel at a time. The
 %principle of calibration passes the output current from one channel into

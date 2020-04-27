@@ -1,3 +1,12 @@
+% HFAC_4ch_Monophasic_Stimulation.m
+%  
+% 
+% Author: Adrien Rapeaux
+%  
+% Licensing:
+% This file is licensed under the GNU GPL v3 license.
+% You can access the license at https://www.gnu.org/licenses/gpl-3.0.html
+
 %This script is used 4-channel HFAC Stimulators for monophasic stimulation.
 %Ensure that all stimulators connected to the PC System/Rig have been
 %initialized (that you have run HFAC_4ch_Stimulator_Initialization)

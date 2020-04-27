@@ -1,0 +1,3 @@
+Licenses:
+The Matlab files in this folder are all published under a GNU GPL v3 license.
+You can access the GNU GPL V3 license at https://www.gnu.org/licenses/gpl-3.0.html.

@@ -3,6 +3,10 @@
  *
  *  Created on: 21 Jan 2019
  *      Author: Adrien Rapeaux
+ *
+ *  Licensing:
+ *  This file is licensed under the GNU GPL v3 license.
+ *  You can access the license at https://www.gnu.org/licenses/gpl-3.0.html
  */
 
 

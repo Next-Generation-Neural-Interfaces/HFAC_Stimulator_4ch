@@ -1,3 +1,12 @@
+% HFAC_4ch_Combined_Stim_Block.m
+%  
+% 
+% Author: Adrien Rapeaux
+%  
+% Licensing:
+% This file is licensed under the GNU GPL v3 license.
+% You can access the license at https://www.gnu.org/licenses/gpl-3.0.html
+
 %This script is used 4-channel HFAC Stimulators for biphasic stimulation.
 %Stimulation is cathodic phase first.
 %This stimulation script has simplified commands for biphasic symmetric
