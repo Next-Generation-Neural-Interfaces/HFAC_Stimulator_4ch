@@ -31,38 +31,38 @@ endif
 
 # Add inputs and outputs from these tool invocations to the build variables 
 SECONDARY_FLASH += \
-K64F_HFAC_Stimulator.hex \
+HFAC_Stimulator_MCU.hex \
 
 SECONDARY_SIZE += \
-K64F_HFAC_Stimulator.siz \
+HFAC_Stimulator_MCU.siz \
 
 
 # All Target
-all: K64F_HFAC_Stimulator.elf secondary-outputs
+all: HFAC_Stimulator_MCU.elf secondary-outputs
 
 # Tool invocations
-K64F_HFAC_Stimulator.elf: $(OBJS) $(USER_OBJS)
+HFAC_Stimulator_MCU.elf: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GNU ARM Cross C Linker'
-	arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections  -g3 -T MK64FN1M0xxx12_flash.ld -Xlinker --gc-sections -L"C:\Users\adrien\MCU Programming\K64F_SDK_NoDebugConsole/devices/MK64F12" -L"C:\Users\adrien\MCU Programming\K64F_SDK_NoDebugConsole/devices/MK64F12/drivers" -L"C:\Users\adrien\MCU Programming\K64F_SDK_NoDebugConsole/devices/MK64F12/gcc" -Wl,-Map,"K64F_HFAC_Stimulator.map" --specs=nano.specs -specs=rdimon.specs -o "K64F_HFAC_Stimulator.elf" $(OBJS) $(USER_OBJS) $(LIBS)
+	arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections  -g3 -T MK64FN1M0xxx12_flash.ld -Xlinker --gc-sections -L"C:\Users\adrien\MCU Programming\K64F_SDK_NoDebugConsole/devices/MK64F12" -L"C:\Users\adrien\MCU Programming\K64F_SDK_NoDebugConsole/devices/MK64F12/drivers" -L"C:\Users\adrien\MCU Programming\K64F_SDK_NoDebugConsole/devices/MK64F12/gcc" -Wl,-Map,"HFAC_Stimulator_MCU.map" --specs=nano.specs -specs=rdimon.specs -o "HFAC_Stimulator_MCU.elf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
-K64F_HFAC_Stimulator.hex: K64F_HFAC_Stimulator.elf
+HFAC_Stimulator_MCU.hex: HFAC_Stimulator_MCU.elf
 	@echo 'Invoking: GNU ARM Cross Create Flash Image'
-	arm-none-eabi-objcopy -O ihex "K64F_HFAC_Stimulator.elf"  "K64F_HFAC_Stimulator.hex"
+	arm-none-eabi-objcopy -O ihex "HFAC_Stimulator_MCU.elf"  "HFAC_Stimulator_MCU.hex"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-K64F_HFAC_Stimulator.siz: K64F_HFAC_Stimulator.elf
+HFAC_Stimulator_MCU.siz: HFAC_Stimulator_MCU.elf
 	@echo 'Invoking: GNU ARM Cross Print Size'
-	arm-none-eabi-size --format=berkeley "K64F_HFAC_Stimulator.elf"
+	arm-none-eabi-size --format=berkeley "HFAC_Stimulator_MCU.elf"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS)$(SECONDARY_FLASH)$(SECONDARY_SIZE)$(ASM_DEPS)$(S_UPPER_DEPS)$(C_DEPS) K64F_HFAC_Stimulator.elf
+	-$(RM) $(OBJS)$(SECONDARY_FLASH)$(SECONDARY_SIZE)$(ASM_DEPS)$(S_UPPER_DEPS)$(C_DEPS) HFAC_Stimulator_MCU.elf
 	-@echo ' '
 
 secondary-outputs: $(SECONDARY_FLASH) $(SECONDARY_SIZE)
