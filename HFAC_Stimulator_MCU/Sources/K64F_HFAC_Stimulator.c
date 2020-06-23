@@ -624,6 +624,390 @@ void ChannelSetup(uint8_t channel, uint8_t mode) {
       if (blockNumberOfTcds>32000) {
           blockNumberOfTcds = 32000;
           //Dealing with a higher number than this is not yet implemented. TODO with chains of PIT DMA TCDs
+          //Maximum time for 50 kHz stimulation: 320 seconds.
+          LED_RED_ON();
+          break;
+      }
+      switch (blockNumberOfTcds) {
+        case 0: { //Less than 500 transfers
+
+          EDMA_PrepareTransfer(&transferConfig,
+                               &blockDACArray[channel][0],
+                               sizeof(blockDACArray[channel][0]),
+                               &(SPI0->PUSHR),
+                               sizeof(SPI0->PUSHR),
+                               sizeof(blockDACArray[channel][0]),
+                               (blockFinalTransfers)*sizeof(blockDACArray[channel][0]), //
+                               kEDMA_MemoryToPeripheral);
+
+          EDMA_TcdSetTransferConfig(&blockTcdDACMain[channel], &transferConfig, &blockTcdDACLast[channel]);
+            //Make this TCD link to the last TCD
+          EDMA_TcdSetChannelLink(&blockTcdDACMain[channel], kEDMA_MajorLink, channel+4);
+            //Set the channel link on major loop completion to change the PIT period for the last SPI transfer to be a half-period.
+
+//          //shortstim case 1 - SPI DMA Final
+//          //the goal of this TCD is to set the channel current output level to 0
+//          EDMA_PrepareTransfer(&transferConfig,
+//                               &blockDACArrayStop[channel][0], //This value corresponds to zero current output for the channel
+//                               sizeof(blockDACArrayStop[channel][0]),
+//                               &(SPI0->PUSHR),
+//                               sizeof(SPI0->PUSHR),
+//                               sizeof(blockDACArrayStop[channel][0]),
+//                               2*sizeof(blockDACArrayStop[channel][0]), //The final TCD only stores one transfer
+//                               kEDMA_MemoryToPeripheral);
+//
+//          EDMA_TcdSetTransferConfig(&blockTcdDACLast[channel], &transferConfig, NULL);
+//          //This TCD is the last in the protocol and so doesn't need to lead anywhere
+//
+//          EDMA_TcdEnableInterrupts(&stimTcdDAC[channel], kEDMA_MajorInterruptEnable);
+//          //Make the SPI DMA interrupt to enable the processor to reset all the appropriate values at the end of the protocol
+
+
+
+          //shortstim case 1 - PIT DMA
+          //In this case the Main PIT DMA TCD acts like the final TCD
+          //The purpose of this TCD is to change the PIT period to half of what it should be at the end of the blocking waveform
+          //for the purpose of charge balance in triphasic block
+          EDMA_PrepareTransfer(&transferConfig,
+                               &blockPITArray[channel][5],
+                               sizeof(blockPITArray[channel][5]),
+                               &(PIT->CHANNEL[channel].LDVAL),
+                               sizeof(PIT->CHANNEL[channel].LDVAL),
+                               sizeof(blockPITArray[channel][5]),
+                               sizeof(blockPITArray[channel][5]), //The 'Main' PIT TCD in this case only has one transfer
+                               kEDMA_MemoryToPeripheral);
+
+          EDMA_TcdSetTransferConfig(&blockTcdPITMain[channel], &transferConfig, NULL);
+            //Make this TCD link to nothing as the transfer it describes will be the last in the protocol for that channel
+
+          break;
+        }
+        case 1: { //Between 501 and 1000 transfers
+
+          //In this case Main -> Penultimate -> Last
+          //shortstim case 2 - SPI DMA Main
+          EDMA_PrepareTransfer(&transferConfig,
+                               &blockDACArray[channel][0],
+                               sizeof(blockDACArray[channel][0]),
+                               &(SPI0->PUSHR),
+                               sizeof(SPI0->PUSHR),
+                               sizeof(blockDACArray[channel][0]),
+                               500*sizeof(blockDACArray[channel][0]),
+                               kEDMA_MemoryToPeripheral);
+
+          EDMA_TcdSetTransferConfig(&blockTcdDACMain[channel], &transferConfig, &blockTcdDACPenUlt[channel]);
+            //Make this TCD link to the penultimate TCD
+
+          //shortstim case 2 - SPI DMA PenUlt
+          EDMA_PrepareTransfer(&transferConfig,
+                               &blockDACArray[channel][0],
+                               sizeof(blockDACArray[channel][0]),
+                               &(SPI0->PUSHR),
+                               sizeof(SPI0->PUSHR),
+                               sizeof(blockDACArray[channel][0]),
+                               blockFinalTransfers*sizeof(blockDACArray[channel][0]),
+                               kEDMA_MemoryToPeripheral);
+
+          EDMA_TcdSetTransferConfig(&blockTcdDACPenUlt[channel], &transferConfig, &blockTcdDACLast[channel]);
+            //Make this TCD link to the last TCD in the protocol
+          EDMA_TcdSetChannelLink(&blockTcdDACPenUlt[channel], kEDMA_MajorLink, channel+4);
+            //Set the channel link on major loop completion to change the PIT period for the last SPI transfer to be a half-period.
+            //This is primarily what sets Main and PenUlt appart.
+
+          //shortstim case 2 - PIT DMA
+          EDMA_PrepareTransfer(&transferConfig,
+                               &blockPITArray[channel][5],
+                               sizeof(blockPITArray[channel][5]),
+                               &(PIT->CHANNEL[channel].LDVAL),
+                               sizeof(PIT->CHANNEL[channel].LDVAL),
+                               sizeof(blockPITArray[channel][5]),
+                               sizeof(blockPITArray[channel][5]), //The 'Main' PIT TCD in this case only has one transfer
+                               kEDMA_MemoryToPeripheral);
+
+          EDMA_TcdSetTransferConfig(&blockTcdPITMain[channel], &transferConfig, NULL);
+            //Make this TCD link to nothing as the transfer it describes will be the last in the protocol for that channel
+
+          break;
+        }
+        case 2: {
+            //Go to case 3
+        }
+        case 3: { //up to 2000 transfers
+
+          //longstim - SPI DMA Main
+          //Due to how scatter gather works we can't use TCDs with 500 transfers in; we need to ensure at least 4 TCDs are used,
+          //including the penultimate TCD
+          test = ((blockNumberOfTransfers[channel]-2)/4);
+          test2 = ((blockNumberOfTransfers[channel]-2)/4+2+(blockNumberOfTransfers[channel]-2)%4);
+
+          EDMA_PrepareTransfer(&transferConfig,
+                               &blockDACArray[channel][0],
+                               sizeof(blockDACArray[channel][0]),
+                               &(SPI0->PUSHR),
+                               sizeof(SPI0->PUSHR),
+                               sizeof(blockDACArray[channel][0]),
+                               ((blockNumberOfTransfers[channel]-2)/4)*sizeof(blockDACArray[channel][0]),
+                                 //Due to how scatter-gather works we have to make it so that more TCDs are used to
+                                 //cover for cases between 1001 and 1500 transfers otherwise. Should not affect
+                                 //the program negatively.
+                               kEDMA_MemoryToPeripheral);
+
+          EDMA_TcdSetTransferConfig(&blockTcdDACMain[channel], &transferConfig, &blockTcdDACMain[channel]);
+            //Make this TCD point to itself for scatter-gather
+          EDMA_TcdSetChannelLink(&blockTcdDACMain[channel], kEDMA_MajorLink, channel+4);
+            //Set the channel link on major loop completion to have the PIT DMA decrement its major loop iteration counter
+            //once for each time the SPI DMA completes a TCD's worth of transfers (500)
+
+
+          //longstim - SPI DMA Penultimate
+          EDMA_PrepareTransfer(&transferConfig,
+                               &blockDACArray[channel][0],
+                               sizeof(blockDACArray[channel][0]),
+                               &(SPI0->PUSHR),
+                               sizeof(SPI0->PUSHR),
+                               sizeof(blockDACArray[channel][0]),
+                               ((blockNumberOfTransfers[channel]-2)/4+2+(blockNumberOfTransfers[channel]-2)%4)*sizeof(blockDACArray[channel][0]),
+                                 //We must ensure that there will always be at least one transfer inside this TCD, hence the +2
+                               kEDMA_MemoryToPeripheral);
+
+          EDMA_TcdSetTransferConfig(&blockTcdDACPenUlt[channel], &transferConfig, &blockTcdDACLast[channel]);
+            //Make this TCD point to itself for scatter-gather
+          EDMA_TcdSetChannelLink(&blockTcdDACPenUlt[channel], kEDMA_MajorLink, channel+4);
+            //Set the channel link on major loop completion to have the PIT DMA change the PIT period to half for
+            //Charge balancing the waveform. This assumes that by the time the SPI DMA carries out this transfer
+            //the PIT DMA will have changed its TCD after counting SPI DMA TCDs back to changing the PIT period.
+
+          //longstim - PIT DMA Main
+          //In this case the PIT DMA Main acts like the penultimate, which is replaced. The Main TCD links directly to the Last.
+          EDMA_PrepareTransfer(&transferConfig,
+                               &blockTcdDACPenUltPtr[channel],
+                               sizeof(blockTcdDACPenUltPtr[channel]),
+                               &(blockTcdDACMain[channel].DLAST_SGA),
+                               sizeof(blockTcdDACMain[channel].DLAST_SGA),
+                               sizeof(blockTcdDACMain[channel].DLAST_SGA),
+                               sizeof(blockTcdDACMain[channel].DLAST_SGA), //The PenUlt PIT TCD in this case only has one transfer
+                               kEDMA_MemoryToMemory);
+
+          EDMA_TcdSetTransferConfig(&blockTcdPITMain[channel], &transferConfig, &blockTcdPITLast[channel]);
+            //Make this TCD link to the last PIT TCD for the protocol
+
+          //longstim - PIT DMA Last
+          //The purpose of this TCD is to change the PIT period to half for the charge balancing half-phase at the end
+          //of the continuous stimulation protocol
+          EDMA_PrepareTransfer(&transferConfig,
+                               &blockPITArray[channel][3],
+                               sizeof(blockPITArray[channel][3]),
+                               &(PIT->CHANNEL[channel].LDVAL),
+                               sizeof(PIT->CHANNEL[channel].LDVAL),
+                               sizeof(blockPITArray[channel][3]),
+                               3*sizeof(blockPITArray[channel][3]),
+                                 //This TCD has three transfers, the first two being dummy transfers due to how the TCDs are chained
+                               kEDMA_MemoryToPeripheral);
+
+          EDMA_TcdSetTransferConfig(&blockTcdPITLast[channel], &transferConfig, NULL);
+            //Make this TCD link to nothing as the transfer it describes will be the last in the protocol for that channel
+
+          break;
+        }
+        default: { //More than 2000 transfers
+
+          //longstim - SPI DMA Main
+          EDMA_PrepareTransfer(&transferConfig,
+                               &blockDACArray[channel][0],
+                               sizeof(blockDACArray[channel][0]),
+                               &(SPI0->PUSHR),
+                               sizeof(SPI0->PUSHR),
+                               sizeof(blockDACArray[channel][0]),
+                               500*sizeof(blockDACArray[channel][0]), //
+                               kEDMA_MemoryToPeripheral);
+
+          EDMA_TcdSetTransferConfig(&blockTcdDACMain[channel], &transferConfig, &blockTcdDACMain[channel]);
+            //Make this TCD point to itself for scatter-gather
+          EDMA_TcdSetChannelLink(&blockTcdDACMain[channel], kEDMA_MajorLink, channel+4);
+            //Set the channel link on major loop completion to have the PIT DMA decrement its major loop iteration counter
+            //once for each time the SPI DMA completes a TCD's worth of transfers (500)
+
+
+          //longstim - SPI DMA Penultimate
+          EDMA_PrepareTransfer(&transferConfig,
+                               &blockDACArray[channel][0],
+                               sizeof(blockDACArray[channel][0]),
+                               &(SPI0->PUSHR),
+                               sizeof(SPI0->PUSHR),
+                               sizeof(blockDACArray[channel][0]),
+                               (blockFinalTransfers)*sizeof(blockDACArray[channel][0]), //
+                               kEDMA_MemoryToPeripheral);
+
+          EDMA_TcdSetTransferConfig(&blockTcdDACPenUlt[channel], &transferConfig, &blockTcdDACLast[channel]);
+            //Make this TCD point to itself for scatter-gather
+          EDMA_TcdSetChannelLink(&blockTcdDACPenUlt[channel], kEDMA_MajorLink, channel+4);
+            //Set the channel link on major loop completion to have the PIT DMA change the PIT period to half for
+            //Charge balancing the waveform. This assumes that by the time the SPI DMA carries out this transfer
+            //the PIT DMA will have changed its TCD after counting SPI DMA TCDs back to changing the PIT period.
+
+          //longstim - PIT DMA Main
+          //The purpose of this TCD is to use the major loop iteration counter of the PIT DMA to count the number
+          //of 'Main' TCDs the SPI DMA has gone through
+          EDMA_PrepareTransfer(&transferConfig,
+                               &DMADummyTransfer[0],
+                               sizeof(DMADummyTransfer[0]),
+                               &DMADummyTransfer[1],
+                               sizeof(DMADummyTransfer[1]),
+                               sizeof(DMADummyTransfer[0]),
+                               (blockNumberOfTcds-3)*sizeof(DMADummyTransfer[0]),
+                               kEDMA_PeripheralToMemory);
+
+          EDMA_TcdSetTransferConfig(&blockTcdPITMain[channel], &transferConfig, &blockTcdPITPenUlt[channel]);
+            //Make this TCD link to the PIT DMA Penultimate TCD
+
+          //longstim - PIT DMA PenUlt
+          //The purpose of this TCD is to have the PIT DMA change the nextTCD pointer in the SPI DMA TCD in memory to point
+          //to the penultimate TCD when the configured number of loops through the main TCD have been expended. The stimulation
+          //then terminates as in the previous cases
+          EDMA_PrepareTransfer(&transferConfig,
+                               &blockTcdDACPenUltPtr[channel],
+                               sizeof(blockTcdDACPenUltPtr[channel]),
+                               &(blockTcdDACMain[channel].DLAST_SGA),
+                               sizeof(blockTcdDACMain[channel].DLAST_SGA),
+                               sizeof(blockTcdDACMain[channel].DLAST_SGA),
+                               sizeof(blockTcdDACMain[channel].DLAST_SGA), //The PenUlt PIT TCD in this case only has one transfer
+                               kEDMA_MemoryToMemory);
+
+          EDMA_TcdSetTransferConfig(&blockTcdPITPenUlt[channel], &transferConfig, &blockTcdPITLast[channel]);
+            //Make this TCD link to the last PIT TCD for the protocol
+
+          //longstim - PIT DMA Last
+          //The purpose of this TCD is to change the PIT period to half for the charge balancing half-phase at the end
+          //of the continuous stimulation protocol
+          EDMA_PrepareTransfer(&transferConfig,
+                               &blockPITArray[channel][3],
+                               sizeof(blockPITArray[channel][3]),
+                               &(PIT->CHANNEL[channel].LDVAL),
+                               sizeof(PIT->CHANNEL[channel].LDVAL),
+                               sizeof(blockPITArray[channel][3]),
+                               3*sizeof(blockPITArray[channel][3]),
+                                 //This TCD has three transfers, the first two being dummy transfers due to how the TCDs are chained
+                               kEDMA_MemoryToPeripheral);
+
+          EDMA_TcdSetTransferConfig(&blockTcdPITLast[channel], &transferConfig, NULL);
+            //Make this TCD link to nothing as the transfer it describes will be the last in the protocol for that channel
+          break;
+        }
+      }
+
+
+
+      //All cases - SPI DMA Last
+      //the goal of this TCD is to set the channel current output level to 0 after a charge-balancing final half-phase
+      EDMA_PrepareTransfer(&transferConfig,
+                           &blockDACArrayStop[channel][0], //This value corresponds to zero current output for the channel
+                           sizeof(blockDACArrayStop[channel][0]),
+                           &(SPI0->PUSHR),
+                           sizeof(SPI0->PUSHR),
+                           sizeof(blockDACArrayStop[channel][0]),
+                           2*sizeof(blockDACArrayStop[channel][0]), //The final TCD stores two transfers: the first to complete the final half-phase
+                             //for charge balancing, the second to set the current output of the channel to zero
+                           kEDMA_MemoryToPeripheral);
+
+      EDMA_TcdSetTransferConfig(&blockTcdDACLast[channel], &transferConfig, NULL);
+        //Make this TCD link to nothing as the transfer it describes will be the last in the protocol for that channel
+
+      EDMA_TcdEnableInterrupts(&blockTcdDACLast[channel], kEDMA_MajorInterruptEnable);
+      //Make the DMA interrupt to enable the processor to reset all the appropriate values at the end of the protocol
+
+
+      break;
+    }
+    case 3:{//This mode corresponds to continuous biphasic stimulation used for experimental purposes
+      //It relies on PIT-triggered DMA transfers to SPI to send output value data to the external DAC
+      //A series of DMA Transfer Control Descriptors handle all switching and chnages in output from the DAC
+      //This protocol is identical to the triphasic mode however the values of PIT DMA vector have been changed
+      //to ensure that the start and end of the waveform use full length half-phases instead of half-length
+      //as it is in triphasic mode
+      //Biphasic block shouldn't be used by default since it causes large DC-like current transients to occur
+      //at the electrode-electrolyte interface at the start and end of stimulation.
+
+
+      //Set up blockTCDDACStart[channel]
+      //Startup stage setup: SPI DMA
+      EDMA_PrepareTransfer(&transferConfig,
+                           &blockDACArray[channel][1],
+                           sizeof(blockDACArray[channel][1]),
+                           &(SPI0->PUSHR),
+                           sizeof(SPI0->PUSHR),
+                           sizeof(blockDACArray[channel][1]),
+                           sizeof(blockDACArray[channel][1]), //The start TCD only has one transfer
+                           kEDMA_MemoryToPeripheral);
+
+      EDMA_TcdSetTransferConfig(&blockTcdDACStart[channel], &transferConfig, &blockTcdDACMain[channel]);
+        //Make this TCD link to the Main TCD
+      EDMA_TcdSetChannelLink(&blockTcdDACStart[channel], kEDMA_MajorLink, channel+4);
+        //Set the channel link on major loop completion to change the PIT period from a half period to the full period (for startup)
+      EDMA_InstallTCD(DMA0, channel, &blockTcdDACStart[channel]); //Install this TCD to run first. No interrupts needed here.
+
+      EDMA_StartTransfer(&g_EDMA_Handle[channel]); //This enables the DMA channel to accept transfer requests
+        //The protocol will only start when the PIT triggers so starting the PIT starts the protocol
+
+      //Startup stage setup: PIT DMA
+      //The goal of this TCD is to set the PIT period to that of the normal blocking signal
+      //The initial PIT period change to the initial half-period will have been set up by the processor upon starting the protocol
+      //This is because there are no SPI DMA transfers initially which can trigger this channel to do this
+      EDMA_PrepareTransfer(&transferConfig,
+                           &blockPITArray[channel][2],
+                           //The second element is the one corresponding to the frequency of the block signal
+                           sizeof(blockPITArray[channel][2]),
+                           &(PIT->CHANNEL[channel].LDVAL),
+                           sizeof(PIT->CHANNEL[channel].LDVAL),
+                           sizeof(blockPITArray[channel][2]),
+                           sizeof(blockPITArray[channel][2]), //The start TCD only has one transfer
+                           kEDMA_MemoryToPeripheral);
+
+      EDMA_TcdSetTransferConfig(&blockTcdPITStart[channel], &transferConfig, &blockTcdPITMain[channel]);
+        //Make this TCD link to the main TCD
+      EDMA_TcdSetChannelLink(&blockTcdPITStart[channel], kEDMA_MajorLink, channel+8);
+        //Make this channel toggle the stim trigger signal when it fires
+      EDMA_InstallTCD(DMA0, channel+4, &blockTcdPITStart[channel]);
+
+      //Set up the GPIO toggling DMA channel for the block stim trigger signal
+      EDMA_PrepareTransfer(&transferConfig,
+                           &stimGPIOArray[channel],
+                           sizeof(stimGPIOArray[channel]),
+                           &(GPIOC->PTOR),
+                           sizeof(GPIOC->PTOR),
+                           sizeof(stimGPIOArray[channel]),
+                           sizeof(stimGPIOArray[channel]),
+                             //Total bytes transferred is the size of the destination as this channel will only fire once
+                           kEDMA_PeripheralToPeripheral);
+
+      EDMA_TcdSetTransferConfig(&stimTcdGPIO[channel], &transferConfig, NULL);
+      EDMA_InstallTCD(DMA0, channel+8, &stimTcdGPIO[channel]);
+
+
+      //Main stage setup: here we must figure out how many TCDs worth of transfers the SPI DMA will carry out
+      //If the number of transfers is inferior to 1001 we are in a 'shortstim' case
+      //In this case the SPI DMA TCDs are chained similarly to conventional stimulation
+      //There is a slight difference between cases where transfers are < 500 and cases >=500
+
+      //If the number of transfers is over 1000 we are in the 'longstim' case
+      //In this case the 'Main' TCD is repeated until the number of transfers remaining can be fit into the Penultimate TCD
+      //Main -> Main x N -> Penultimate -> Final
+      //To count the number of 'Main' TCDs loaded by the SPI DMA we use the PIT DMA major loop iteration counter
+      //(up to 32767 SPI DMA 'Main' TCDs can be counted in this way with a single PIT DMA TCD, using a major loop link
+      //In this way we avoid having to store SPI DMA TCDs in a chain in memory or having to interrupt the processor
+      //The PIT DMA loads a new TCD to change the SPI DMA TCD in memory to the penultimate version
+      //when the appropriate number of SPI DMA TCDs has been expended. The updated TCD is subsequently loaded by the SPI DMA.
+
+      //Initial variables:
+      uint32_t blockNumberOfTcds = blockNumberOfTransfers[channel]/500;
+      uint32_t blockFinalTransfers = blockNumberOfTransfers[channel]%500;
+      if (blockFinalTransfers == 0){
+          blockNumberOfTcds--;
+          blockFinalTransfers = 500;
+      }
+      if (blockNumberOfTcds>32000) {
+          blockNumberOfTcds = 32000;
+          //Dealing with a higher number than this is not yet implemented. TODO with chains of PIT DMA TCDs
+          //Maximum time for 50 kHz stimulation: 320 seconds.
           LED_RED_ON();
           break;
       }
@@ -1385,7 +1769,8 @@ int main(void)
                 //the rest of the command data specifies which mode each channel is in:
                 //0: channel OFF
                 //1: channel ON for conventional stimulation
-                //2: channel ON for blocking stimulation
+                //2: channel ON for blocking stimulation, triphasic mode (use this by default)
+                //3: channel ON for blocking stimulation, biphasic mode
                 for(i=0;i<(STIMULATOR_NUMBER_OF_CHANNELS);i++) {
                     channelState[i] = uartCommandArray[i+1];
                     ChannelSetup(i,uartCommandArray[i+1]);
@@ -1418,6 +1803,15 @@ int main(void)
                           //won't be triggered before then
                         break;
                       }
+                      case 3:{ //Biphasic mode for block: just change the blockPITArray[i][1,5] to have the length in time of full half-phases
+                        blockPITArray[i][1] = (uint32_t)USEC_TO_COUNT(halfcycle_us, PIT_SOURCE_CLOCK);
+                        blockPITArray[i][5] = (uint32_t)USEC_TO_COUNT(halfcycle_us, PIT_SOURCE_CLOCK);
+                        PIT->CHANNEL[i].LDVAL = (uint32_t)USEC_TO_COUNT(STIM_PROTOCOL_COUNTDOWN_USEC, PIT_SOURCE_CLOCK)+blockPITArray[i][0];
+                          //Set PIT trigger time as countdown before start of stimulation protocol + the block start delay
+                          //Preload LDVAL on the PIT for the first trigger as the DMA normally in charge of changing LDVAL
+                          //won't be triggered before then
+                        break;
+                      }
                       default: { //default value e.g. 0: do nothing (i.e. don't start the PIT timer) as the channel isn't active
                         break;
                       }
@@ -1436,6 +1830,14 @@ int main(void)
                         break;
                       }
                       case 2:{
+                        //In this second step, activate the PIT and quickly update the LDVAL so that the PIT has the correct timing when triggering for the first time
+                        PIT->CHANNEL[i].TCTRL |= PIT_TCTRL_TEN_MASK; //start the channel's PIT timer
+                        PIT->CHANNEL[i].LDVAL = blockPITArray[i][1];
+                          //Preload LDVAL on the PIT for the first trigger as the DMA normally in charge of changing LDVAL
+                          //won't be triggered before then
+                        break;
+                      }
+                      case 3:{//Biphasic mode for block, identical to case 2 here
                         //In this second step, activate the PIT and quickly update the LDVAL so that the PIT has the correct timing when triggering for the first time
                         PIT->CHANNEL[i].TCTRL |= PIT_TCTRL_TEN_MASK; //start the channel's PIT timer
                         PIT->CHANNEL[i].LDVAL = blockPITArray[i][1];
